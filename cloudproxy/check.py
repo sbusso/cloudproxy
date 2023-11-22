@@ -1,6 +1,7 @@
 import requests as requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+
 from cloudproxy.providers import settings
 
 
@@ -32,14 +33,16 @@ def fetch_ip(ip_address):
         }
     else:
         auth = (
-            settings.config["auth"]["username"] + ":" + settings.config["auth"]["password"]
+            settings.config["auth"]["username"]
+            + ":"
+            + settings.config["auth"]["password"]
         )
 
         proxies = {
             "http": "http://" + auth + "@" + ip_address + ":8899",
             "https": "http://" + auth + "@" + ip_address + ":8899",
         }
-    
+
     s = requests.Session()
     s.proxies = proxies
 
@@ -51,10 +54,14 @@ def fetch_ip(ip_address):
 
 def check_alive(ip_address):
     try:
-        result = requests.get("http://ipecho.net/plain", proxies={'http': "http://" + ip_address + ":8899"}, timeout=3)
+        result = requests.get(
+            "http://ipecho.net/plain",
+            proxies={"http": "http://" + ip_address + ":8899"},
+            timeout=3,
+        )
         if result.status_code in (200, 407):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
