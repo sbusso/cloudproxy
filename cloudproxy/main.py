@@ -1,16 +1,16 @@
 import os
 import random
-import sys
 import re
+import sys
 
 import uvicorn
-
-from loguru import logger
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from uvicorn_loguru_integration import run_uvicorn_loguru
+
 from cloudproxy.providers import settings
 from cloudproxy.providers.settings import delete_queue, restart_queue
 
@@ -19,9 +19,25 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 app = FastAPI()
 
-app.mount("/ui", StaticFiles(directory=(os.path.join(__location__, "../cloudproxy-ui/dist")), html=True), name="static")
-app.mount("/css", StaticFiles(directory=(os.path.join(__location__, "../cloudproxy-ui/dist/css")), html=True), name="cssstatic")
-app.mount("/js", StaticFiles(directory=(os.path.join(__location__, "../cloudproxy-ui/dist/js"))), name="jsstatic")
+app.mount(
+    "/ui",
+    StaticFiles(
+        directory=(os.path.join(__location__, "../cloudproxy-ui/dist")), html=True
+    ),
+    name="static",
+)
+app.mount(
+    "/css",
+    StaticFiles(
+        directory=(os.path.join(__location__, "../cloudproxy-ui/dist/css")), html=True
+    ),
+    name="cssstatic",
+)
+app.mount(
+    "/js",
+    StaticFiles(directory=(os.path.join(__location__, "../cloudproxy-ui/dist/js"))),
+    name="jsstatic",
+)
 
 origins = ["*"]
 
@@ -42,7 +58,7 @@ def main():
 
 def get_ip_list():
     ip_list = []
-    for provider in ['digitalocean', 'aws', 'gcp', 'hetzner']:
+    for provider in ["digitalocean", "aws", "gcp", "hetzner"]:
         if settings.config["providers"][provider]["ips"]:
             for ip in settings.config["providers"][provider]["ips"]:
                 if ip not in delete_queue and ip not in restart_queue:
@@ -124,7 +140,7 @@ def providers():
 
 
 @app.get("/providers/{provider}")
-def providers(provider: str):
+def provider(provider: str):
     if provider in settings.config["providers"]:
         response = settings.config["providers"][provider]
         if "secrets" in response:
@@ -149,4 +165,3 @@ def configure(provider: str, min_scaling: int, max_scaling: int):
 
 if __name__ == "__main__":
     main()
-
